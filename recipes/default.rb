@@ -16,3 +16,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+# curl https://raw.github.com/timkay/aws/master/aws -o aws
+
+user = 'ubuntu'
+group = 'ubuntu'
+aws_key = data_bag_item('utils', 's3')['key']
+aws_secret = data_bag_item('utils', 's3')['secret']
+
+template "~/.awssecret" do
+  source "awssecret.erb"
+  owner user
+  group group
+  mode '0600'
+
+  variables(
+    :key => aws_key,
+    :secret => aws_secret
+  )
+end
+
