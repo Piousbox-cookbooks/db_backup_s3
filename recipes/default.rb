@@ -17,18 +17,19 @@
 # limitations under the License.
 #
 
-
-# curl https://raw.github.com/timkay/aws/master/aws -o aws
-
-user = 'ubuntu'
-group = 'ubuntu'
 aws_key = data_bag_item('utils', 's3')['key']
 aws_secret = data_bag_item('utils', 's3')['secret']
+db_name = data_bag_item('utils', 'db_config')['mongodb_database']
+db_host = data_bag_item('utils', 'db_config')['mongodb_ip']
+bucket_name = data_bag_item('utils', 'db_config')['backup_bucket_name']
+
+template "~/aws" do
+  source "aws"
+  mode "0700"
+end
 
 template "~/.awssecret" do
   source "awssecret.erb"
-  owner user
-  group group
   mode '0600'
 
   variables(
@@ -37,3 +38,17 @@ template "~/.awssecret" do
   )
 end
 
+script 'create the dump file' do
+  %{ mkdir -p /tmp/mongodb && 
+     cd /tmp/mongodb && 
+     mongodump -h #{db_host} -d #{db_name} && 
+     cd dump && 
+     zip -r `date +%Y%m%d`.#{collection_name}.zip #{collection_name}
+   }
+end
+
+script 'upload the dump file to s3' do
+  %{ cd /tmp/mongodb && 
+     ~/aws put #{bucket_name}/mongodb/`date +%Y%m%d`.#{collection_name}.zip `date +%Y%m%d`.#{collection_name}.zip
+   }
+end
