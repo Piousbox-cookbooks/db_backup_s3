@@ -43,12 +43,19 @@ script 'create the dump file' do
      cd /tmp/mongodb && 
      mongodump -h #{db_host} -d #{db_name} && 
      cd dump && 
-     zip -r `date +%Y%m%d`.#{collection_name}.zip #{collection_name}
+     zip -r `date +%Y%m%d`.#{db_name}.zip #{db_name}
    }
 end
 
 script 'upload the dump file to s3' do
   %{ cd /tmp/mongodb && 
-     ~/aws put #{bucket_name}/mongodb/`date +%Y%m%d`.#{collection_name}.zip `date +%Y%m%d`.#{collection_name}.zip
+     ~/aws put #{bucket_name}/mongodb/`date +%Y%m%d`.#{db_name}.zip `date +%Y%m%d`.#{db_name}.zip
    }
 end
+
+script 'cleanup' do
+  %{ cd /tmp/mongodb &&
+     rm -rf dump
+   }
+end
+
