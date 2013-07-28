@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: mongodb_backup_s3
+# Cookbook Name:: db_backup_s3
 # Recipe:: default
 #
-# Copyright 2013, CAC
+# Copyright 2013, Piousbox
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,10 +29,11 @@ end
 
 aws_key = data_bag_item('utils', 's3')['key']
 aws_secret = data_bag_item('utils', 's3')['secret']
-db_name = data_bag_item('utils', 'db_config')['mongodb_database']
-db_host = data_bag_item('utils', 'db_config')['mongodb_ip']
+db_names = data_bag_item('utils', 'db_config')['mysql_databases']
+db_host = data_bag_item('utils', 'db_config')['mysql_ip']
+db_passwd = data_bag_item('utils', 'db_config')['mysql_password']
 bucket_name = data_bag_item('utils', 'db_config')['backup_bucket_name']
-workdir = "/home/ubuntu/mongodb"
+workdir = "/home/ubuntu/mysql"
 
 template "/usr/local/bin/aws" do
   source "aws"
@@ -42,17 +43,13 @@ end
 
 execute "mkdir -p #{workdir}"
 
-execute "cd #{workdir} && mongodump -h #{db_host} -d #{db_name} && cd dump && zip -r `date +%Y%m%d`.#{db_name}.zip #{db_name}"
+db_names.each do |db_name|
+  execute "cd #{workdir} && mysqldump -h #{db_host} -u root -p#{db_passwd} -d #{db_name} > #{db_name}.sql && " + 
+          "zip -r `date +%Y%m%d`.#{db_name}.sql.zip #{db_name}.sql"
 
-# execute "export EC2_ACCESS_KEY=#{aws_key}"
-# execute "export EC2_SECRET_KEY=#{aws_secret}"
+  execute "cd #{workdir} && EC2_ACCESS_KEY=#{aws_key} EC2_SECRET_KEY=#{aws_secret} " + 
+          "/usr/local/bin/aws put #{bucket_name}/sql_backup/`date +%Y%m%d`.#{db_name}.sql.zip `date +%Y%m%d`.#{db_name}.sql.zip"
 
-execute "cd #{workdir}/dump && 
-  EC2_ACCESS_KEY=#{aws_key} EC2_SECRET_KEY=#{aws_secret} /usr/local/bin/aws put #{bucket_name}/mongodb/`date +%Y%m%d`.#{db_name}.zip `date +%Y%m%d`.#{db_name}.zip"
+end
 
-# script 'cleanup' do
-#   %{
-#     rm -rf #{workdir}
-#    }
-# end
-
+# execute "cd && rm -rf #{workdir}/*"

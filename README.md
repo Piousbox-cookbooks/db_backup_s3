@@ -1,20 +1,20 @@
-mongodb_backup_s3 Cookbook
+db_backup_s3 Cookbook
 ==========================
 
-Backs up mongodb to S3
+Includes a recipe to back up mongodb to S3.
+
+Includes a recipe to back up mysql to S3.
+
 
 Requirements
 ------------
-
  * method of connecting to s3
  * s3 connection configuration
  * mongodb connection configuration
+ * mysql connection configuration
 
-TODO: List your cookbook requirements. Be sure to include any requirements this cookbook has on platforms, libraries, other cookbooks, packages, operating systems, etc.
-
-e.g.
 #### packages
-- `toaster` - mongodb_backup_s3 needs toaster to brown your bagel.
+- `toaster` - db_backup_s3 needs toaster to brown your bagel.
 
 Attributes
 ----------
@@ -30,7 +30,7 @@ e.g.
     <th>Default</th>
   </tr>
   <tr>
-    <td><tt>['mongodb_backup_s3']['bacon']</tt></td>
+    <td><tt>['db_backup_s3']['bacon']</tt></td>
     <td>Boolean</td>
     <td>whether to include bacon</td>
     <td><tt>true</tt></td>
@@ -39,32 +39,27 @@ e.g.
 
 Usage
 -----
-#### mongodb_backup_s3::default
+#### db_backup_s3::mysql
+#### db_backup_s3::mongodb
 
 There is a data bag 'utils/s3.json' that has attributes 'key' and 'secret', those are your S3 credentials.
 
-Include `mongodb_backup_s3` in your node's `run_list`:
+Include `db_backup_s3` in your node's `run_list`, with the appropriate recipe name:
 
 ```json
 {
   "name":"my_node",
   "run_list": [
-    "recipe[mongodb_backup_s3]"
+    "recipe[db_backup_s3::mongodb]",
+    "recipe[db_backup_s3::mysql]"
   ]
 }
 ```
 
-Contributing
-------------
+Make sure that the bucket exists. Inside the bucket there should be folders:
+/mongodb
+/sql_backup
 
-This is a public cookbook. To contribute:
-
-1. Fork the repository on Github
-2. Create a named feature branch (like `add_component_x`)
-3. Write you change
-4. Write tests for your change (if applicable)
-5. Run the tests, ensuring they all pass
-6. Submit a Pull Request using Github
 
 License and Authors
 -------------------
